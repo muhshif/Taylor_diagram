@@ -1,0 +1,91 @@
+;**********************************
+; taylor_8.ncl
+;**********************************
+;
+; These files are loaded by default in NCL V6.2.0 and newer
+; load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"   
+; load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"  
+;
+; This file still has to be loaded manually 
+load "./taylor_diagram_cam.ncl"
+;**********************************
+begin
+;**********************************
+; Assume the following have already been computed:
+;   _ratio are the ratio:  Case_Variance/Reference_Variance
+;   _cc    are the cross correlation coef of Case to Reference
+;   _bias  are the bias estimates 
+;**********************************
+
+; Cases [Model]
+  case      = (/ "model1", "model2" /) 
+  nCase     = dimsizes(case )                 ; # of Cases [Cases]
+
+; variables compared
+  var       = (/"1983","1988","1994","2007","1982","1985","1986","1987","2002","2004","2009","2015" /) 
+  nVar      = dimsizes(var)                   ; # of Variables
+
+; "Case model1" 
+  model1_ratio   = (/1.26861,1.32047,1.39489,1.47678,1.10711,1.16803,1.22373,1.1287,0.947808,1.11802,0.979279,1.01358 /)
+  model1_cc      = (/0.29549,0.16273,0.536357,0.481408,0.509474,0.646557,0.472608,0.70454,0.589601,0.587501,0.54741,0.54382 /)
+  Bias_model1         = (/37.939,44.943,61.0504,68.0758,36.024,45.3654,46.9095,46.4595,12.6788,24.2053,14.2979,15.7344 /) 
+
+; "Case model2"                        
+  model2_ratio   = (/1.13492,1.19818,1.23532,1.43992,1.0247,1.03784,1.13235,0.913135,0.785381,0.973751,0.948522,0.752424 /)
+  model2_cc      = (/0.416773,0.329042,0.537689,0.518963,0.546007,0.645802,0.668909,0.604697,0.788648,0.577703,0.602123,0.327369 /)
+  Bias_model2         = (/23.4021,31.5194,42.6267,63.8801,25.6255,29.1629,35.9388,18.4881,-6.63129,8.17818,10.7077,-14.0855 /) 
+
+; arrays to be passed to taylor plot 
+  ratio      = new ((/nCase, nVar/),typeof(model1_cc) )  
+  cc         = new ((/nCase, nVar/),typeof(model1_cc) ) 
+  bias       = new ((/nCase, nVar/),typeof(model1_cc) ) 
+
+
+  ratio(0,:) = model1_ratio
+  ratio(1,:) = model2_ratio
+
+
+  cc(0,:)    = model1_cc
+  cc(1,:)    = model2_cc
+
+
+  bias(0,:)  = Bias_model1
+  bias(1,:)  = Bias_model2
+
+;**********************************
+; create plot
+;**********************************
+
+;res   = True                           ; default taylor diagram
+        
+;res@Markers      = (/16, 16/)               ; make all solid fill
+;res@Colors       = (/"red", "blue" /)          
+;res@varLabels    = var
+;res@caseLabels   = case
+ 
+
+;**********************************
+; create plot
+;**********************************
+
+  ty_opt   = True                           ; taylor diagram with options
+        
+  ty_opt@Markers       = (/16, 16/)         ; make all solid fill
+  ty_opt@Colors        = (/"red", "blue" /)          
+  ty_opt@varLabels     = var
+  ty_opt@caseLabels    = case
+
+;ty_opt@varLabelsYloc = 1.5                ; Move location of variable labels [default 0.45]
+;ty_opt@caseLabelsFontHeightF = 0.14       ; make slight larger   [default=0.12 ]
+;ty_opt@varLabelsFontHeightF  = 0.011      ; make slight smaller  [default=0.013]
+ 
+  ty_opt@tiMainString  = "Extreme Rainfall Events"           ; title
+  ty_opt@stnRad        = (/ 0.5, 1.5 /)     ; additional standard radii
+  ty_opt@ccRays        = (/ 0.4,0.5,0.6,0.7,0.9 /)     ; correllation rays
+  ty_opt@centerDiffRMS = True               ; RMS 'circles'
+  
+  wks   = gsn_open_wks("png","taylorExtremeEvents")        ; send graphics to PNG file
+  plot  = taylor_diagram_cam(wks,ratio,cc,bias,ty_opt)
+
+end 
+
